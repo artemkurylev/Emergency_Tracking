@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup as bs
 from abc import ABC, abstractmethod
 import requests
+import json
 
 SEARCH_TITLE_CLASSES = {'acm': 'issue-item__title', 'scholar': 'gs_rt', 'springer': 'title'}
 SEARCH_ABSTRACT_CLASSES = {'acm': 'issue-item__title'}
@@ -12,17 +13,23 @@ additional_args = {'acm': {'features': "lxml"}, 'scholar':  {'features': "lxml"}
 
 class Source(ABC):
     def __init__(self, filename, query, n_pages, source_type):
-        self.filename = filename
+
         self.query = ''
         for word in query:
             self.query += word + '+'
         self.n_pages = n_pages
         self.search_link = SEARCH_LINKS[source_type] + self.query
         self.search_class = SEARCH_TITLE_CLASSES[source_type]
+        self.titles = []
+        self.filename = filename
 
     @abstractmethod
     def search(self):
         return []
+
+    def write_json_to_file(self):
+        with open(self.filename, 'w') as wf:
+            json.dump(self.titles, wf)
 
 
 class Scholar(Source):
@@ -37,10 +44,12 @@ class Scholar(Source):
                 self.search_link += f'&start={start}'
             page = requests.get(self.search_link)
             html_page = bs(page.text, **additional_args['scholar'])
+            print(html_page)
             title_classes += Scholar.search_scholar_page(html_page, self.search_class)
-        titles = [f'{idx + 1}) Name: {title.text} \n\n Link: {title.get("href")} \n\n' for idx, title in
+            print(len(title_classes))
+        self.titles = [{'Name': title.text, 'Link': title.get("href")} for idx, title in
                   enumerate(title_classes)]
-        return titles
+        self.write_json_to_file()
 
     @staticmethod
     def search_scholar_page(html_page, search_class):
@@ -66,9 +75,9 @@ class Springer(Source):
             page = requests.get(self.search_link)
             html_page = bs(page.text, **additional_args['springer'])
             title_objects += Springer.search_springer_page(html_page, self.search_class)
-        titles = [f'{idx + 1}) Name: {title.text} \n\n Link: {title.get("href")} \n\n' for idx, title in
-                  enumerate(title_objects)]
-        return titles
+        self.titles = [{'Name': title.text, 'Link': title.get("href")} for idx, title in
+                       enumerate(title_objects)]
+        self.write_json_to_file()
 
     @staticmethod
     def search_springer_page(html_page, search_class):
@@ -92,9 +101,9 @@ class ACM(Source):
             page = requests.get(self.search_link)
             html_page = bs(page.text, **additional_args['acm'])
             title_classes += ACM.search_acm_page(html_page, self.search_class)
-        titles = [f'{idx + 1}) Name: {title.text} \n\n Link: {title.find("a").get("href")} \n\n' for idx, title in
-                  enumerate(title_classes)]
-        return titles
+        self.titles = [{'Name': title.text, 'Link': title.find("a").get("href")} for idx, title in
+                       enumerate(title_classes)]
+        self.write_json_to_file()
 
     @staticmethod
     def search_acm_page(html_page, search_class):

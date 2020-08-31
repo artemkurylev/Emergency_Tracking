@@ -34,7 +34,7 @@ def main(source, query, filename='default.txt', abstract=False, n_pages=1):
     titles = searcher.search()
     # Get titles from the first page
 
-    save_text_file(filename, titles)
+    # save_text_file(filename, titles)
 
 
 if __name__ == '__main__':

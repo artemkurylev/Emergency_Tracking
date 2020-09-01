@@ -8,12 +8,11 @@ SEARCH_ABSTRACT_CLASSES = {'acm': 'issue-item__title'}
 SEARCH_LINKS = {'acm': 'https://dl.acm.org/action/doSearch?AllField=',
                 'scholar': 'https://scholar.google.com/scholar?as_ylo=2016&q=',
                 'springer': 'https://link.springer.com/search/page/1?query='}
-additional_args = {'acm': {'features': "lxml"}, 'scholar':  {'features': "lxml"}, 'springer': {'features': "lxml"}}
+additional_args = {'acm': {'features': "lxml"}, 'scholar': {'features': "lxml"}, 'springer': {'features': "lxml"}}
 
 
 class Source(ABC):
     def __init__(self, filename, query, n_pages, source_type):
-
         self.query = ''
         for word in query:
             self.query += word + '+'
@@ -48,7 +47,7 @@ class Scholar(Source):
             title_classes += Scholar.search_scholar_page(html_page, self.search_class)
             print(len(title_classes))
         self.titles = [{'Name': title.text, 'Link': title.get("href")} for idx, title in
-                  enumerate(title_classes)]
+                       enumerate(title_classes)]
         self.write_json_to_file()
 
     @staticmethod
